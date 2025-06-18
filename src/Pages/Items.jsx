@@ -93,15 +93,15 @@ function Items() {
 	}, [filteredItems, sortOrder, rarityOrder]);
 
 	return (
-		<div className='relative mx-auto max-w-[1200px] p-6 bg-gray-900 rounded-lg mt-10 text-white'>
-			<h1 className='text-3xl font-bold mb-6'>Items</h1>
+		<div className='relative mx-auto max-w-[1200px] p-4 sm:p-6 bg-gray-900 rounded-lg mt-10 text-white'>
+			<h1 className='text-2xl sm:text-3xl font-bold mb-6'>Items</h1>
 			{/* Bộ lọc, tìm kiếm và sắp xếp */}
-			<div className='mb-6 flex flex-col md:flex-row gap-4 bg-gray-800 p-4 rounded-lg justify-between'>
-				<div className='flex gap-4'>
+			<div className='mb-6 flex flex-col gap-4 bg-gray-800 p-4 rounded-lg'>
+				<div className='flex flex-col sm:flex-row gap-4'>
 					<select
 						value={selectedRarity}
 						onChange={handleRarityChange}
-						className='p-2 rounded-md text-black'
+						className='p-2 rounded-md text-black w-full sm:w-auto'
 						aria-label='Chọn độ hiếm của vật phẩm'
 					>
 						<option value=''>Tất cả độ hiếm</option>
@@ -114,7 +114,7 @@ function Items() {
 					<select
 						value={sortOrder}
 						onChange={handleSortChange}
-						className='p-2 rounded-md text-black'
+						className='p-2 rounded-md text-black w-full sm:w-auto'
 						aria-label='Chọn thứ tự sắp xếp'
 					>
 						<option value='asc'>A-Z</option>
@@ -128,12 +128,12 @@ function Items() {
 					placeholder='Tìm kiếm theo tên...'
 					value={searchTerm}
 					onChange={handleSearchChange}
-					className='p-2 rounded-md text-black'
+					className='p-2 rounded-md text-black w-full'
 					aria-label='Tìm kiếm vật phẩm theo tên'
 				/>
 			</div>
 
-			<div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
+			<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
 				{sortedItems.map((item, index) => (
 					<div key={index} className='p-4 bg-gray-800 rounded-lg'>
 						<img

@@ -5,7 +5,6 @@ import ChampionCard from "./ChampionCard";
 import chamPOC from "../Data/chamPOC.json";
 
 function Champions() {
-	// Initialize state from localStorage
 	const [searchTerm, setSearchTerm] = useState(
 		() => localStorage.getItem("championsSearchTerm") || ""
 	);
@@ -16,12 +15,10 @@ function Champions() {
 		() => localStorage.getItem("championsSortOrder") || "asc"
 	);
 
-	// Save state to localStorage
 	const saveToLocalStorage = useCallback((key, value) => {
 		localStorage.setItem(key, value);
 	}, []);
 
-	// Memoized event handlers
 	const handleSearchChange = useCallback(
 		e => {
 			const value = e.target.value;
@@ -49,12 +46,10 @@ function Champions() {
 		[saveToLocalStorage]
 	);
 
-	// Memoize unique regions
 	const uniqueRegions = useMemo(() => {
 		return [...new Set(chamPOC.flatMap(champ => champ.regions || []))].sort();
 	}, []);
 
-	// Memoize filtered champions
 	const filteredChampions = useMemo(() => {
 		return chamPOC.filter(champ => {
 			const matchesSearch = (champ.name || "")
@@ -67,7 +62,6 @@ function Champions() {
 		});
 	}, [searchTerm, selectedRegion]);
 
-	// Memoize sorted champions
 	const sortedChampions = useMemo(() => {
 		return [...filteredChampions].sort((a, b) => {
 			const nameA = a.name || "";
@@ -79,15 +73,15 @@ function Champions() {
 	}, [filteredChampions, sortOrder]);
 
 	return (
-		<div className='relative w-full min-h-screen bg-gray-900'>
-			<div className='mt-10 p-3 mx-auto max-w-[1200px]'>
+		<div className='relative w-full max-w-[1200px] mx-auto bg-gray-900'>
+			<div className='mt-6 p-4 sm:p-6'>
 				{/* Bộ lọc và tìm kiếm */}
-				<div className='mb-6 flex flex-col md:flex-row gap-4 bg-gray-800 p-4 rounded-lg justify-between px-14'>
-					<div className='flex gap-4'>
+				<div className='mb-6 flex flex-col gap-4 bg-gray-800 p-4 rounded-lg'>
+					<div className='flex flex-col sm:flex-row gap-4'>
 						<select
 							value={selectedRegion}
 							onChange={handleRegionChange}
-							className='p-2 rounded-md text-black'
+							className='p-2 rounded-md text-black w-full sm:w-auto'
 							aria-label='Chọn khu vực của tướng'
 						>
 							<option value=''>Tất cả khu vực</option>
@@ -100,7 +94,7 @@ function Champions() {
 						<select
 							value={sortOrder}
 							onChange={handleSortChange}
-							className='p-2 rounded-md text-black'
+							className='p-2 rounded-md text-black w-full sm:w-auto'
 							aria-label='Chọn thứ tự sắp xếp'
 						>
 							<option value='asc'>A-Z</option>
@@ -112,15 +106,19 @@ function Champions() {
 						placeholder='Tìm kiếm theo tên...'
 						value={searchTerm}
 						onChange={handleSearchChange}
-						className='p-2 rounded-md text-black'
+						className='p-2 rounded-md text-black w-full'
 						aria-label='Tìm kiếm tướng theo tên'
 					/>
 				</div>
 
-				<div className='pt-6 flex flex-wrap rounded-[8px] bg-gray-800 items-center justify-center min-h-screen'>
-					<div className='flex flex-wrap gap-[5px] justify-center'>
+				<div className='pt-4 flex flex-wrap rounded-lg bg-gray-800 items-center justify-center'>
+					<div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 w-full'>
 						{sortedChampions.map((champ, index) => (
-							<Link to={`/champion/${champ.name}`} key={index}>
+							<Link
+								to={`/champion/${champ.name}`}
+								key={index}
+								className='w-full'
+							>
 								<ChampionCard champion={champ} />
 							</Link>
 						))}

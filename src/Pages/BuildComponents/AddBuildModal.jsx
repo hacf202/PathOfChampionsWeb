@@ -69,14 +69,14 @@ function AddBuildModal({
 
 	return (
 		<div
-			className='fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50'
+			className='fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 overflow-y-auto'
 			onClick={handleOverlayClick}
 		>
 			<div
 				ref={modalRef}
-				className='bg-gray-700 p-5 rounded-lg w-full max-w-2xl shadow-xl animate-fade-in'
+				className='bg-gray-700 p-4 sm:p-5 rounded-lg w-full max-w-md sm:max-w-2xl mx-4 sm:mx-0 shadow-xl animate-fade-in mt-52'
 			>
-				<h2 className='text-xl font-bold mb-4'>Thêm Build Mới</h2>
+				<h2 className='text-lg sm:text-xl font-bold mb-4'>Thêm Build Mới</h2>
 				<div className='flex flex-col gap-3'>
 					<SelectionGroup
 						formData={formData}
@@ -91,13 +91,13 @@ function AddBuildModal({
 					<div className='flex justify-center gap-2 mt-4'>
 						<button
 							onClick={onSave}
-							className='px-4 py-2 bg-green-600 rounded-md hover:bg-green-700 transition duration-150 transform hover:scale-105'
+							className='px-3 sm:px-4 py-1.5 sm:py-2 bg-green-600 rounded-md hover:bg-green-700 transition duration-150 transform hover:scale-105 text-sm sm:text-base'
 						>
 							Lưu
 						</button>
 						<button
 							onClick={handleClose}
-							className='px-4 py-2 bg-red-600 rounded-md hover:bg-red-700 transition duration-150 transform hover:scale-105'
+							className='px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 rounded-md hover:bg-red-700 transition duration-150 transform hover:scale-105 text-sm sm:text-base'
 						>
 							Hủy
 						</button>

@@ -128,7 +128,7 @@ function Builds() {
 	}, [saveStatus]);
 
 	useEffect(() => {
-		fetch("http://localhost:3001/api/load-builds")
+		fetch("https://pocweb.onrender.com/api/load-builds")
 			.then(response => {
 				if (!response.ok) throw new Error("Lỗi khi tải builds từ server");
 				return response.json();
@@ -145,11 +145,14 @@ function Builds() {
 
 	const saveBuildsToFile = async (updatedBuilds, action) => {
 		try {
-			const response = await fetch("http://localhost:3001/api/save-builds", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(updatedBuilds),
-			});
+			const response = await fetch(
+				"https://pocweb.onrender.com/api/save-builds",
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(updatedBuilds),
+				}
+			);
 			if (!response.ok) {
 				const { error } = await response.json();
 				throw new Error(error || "Lỗi khi lưu builds");
