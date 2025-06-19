@@ -28,7 +28,7 @@ const TABLE_NAME = "Builds";
 // Middleware
 app.use(
 	cors({
-		origin: ["http://localhost:5173", "https://pocweb.vercel.app"],
+		origin: ["http://localhost:5173", "https://wpoc.vercel.app"],
 		methods: ["GET", "POST"],
 		allowedHeaders: ["Content-Type"],
 	})
@@ -124,5 +124,5 @@ const chunkArray = (array, size) => {
 
 // Khởi động server
 app.listen(PORT, () => {
-	console.log(`Server chạy tại http://localhost:${PORT}`);
+	console.log(`Server chạy tại https://wpoc.vercel.app`);
 });
