@@ -36,6 +36,21 @@ app.use(
 );
 app.use(express.json());
 
+// Hàm chuyển đổi từ định dạng DynamoDB sang JavaScript object
+const convertFromDynamoDB = item => {
+	const result = {};
+	for (const [key, value] of Object.entries(item)) {
+		if ("S" in value) {
+			result[key] = value.S;
+		} else if ("L" in value) {
+			result[key] = value.L.map(v => (v.S ? v.S : v));
+		} else {
+			result[key] = value;
+		}
+	}
+	return result;
+};
+
 // API kiểm tra trạng thái server
 app.get("/api/checkhealth", (req, res) => {
 	try {
@@ -70,15 +85,20 @@ app.post("/api/add-builds", async (req, res) => {
 	try {
 		const timestamp = new Date().toISOString();
 		const build = req.body;
-		console.log(`[${timestamp}] Nhận yêu cầu thêm build`, {
-			buildId: build?.id,
-		});
+		console.log(`[${timestamp}] Nhận yêu cầu thêm build`, { build });
 
 		// Kiểm tra dữ liệu
-		if (!build.id || typeof build.id !== "string") {
-			const errorMsg = "Dữ liệu không hợp lệ: Build phải có ID dạng chuỗi";
-			console.error(`[${timestamp}] ${errorMsg}`);
-			throw new Error(errorMsg);
+		if (
+			!build ||
+			typeof build !== "object" ||
+			!build.id ||
+			!build.id.S ||
+			typeof build.id.S !== "string"
+		) {
+			const errorMsg =
+				"Dữ liệu không hợp lệ: Build phải là object với id.S dạng chuỗi";
+			console.error(`[${timestamp}] ${errorMsg}`, { build });
+			return res.status(400).json({ error: errorMsg });
 		}
 
 		// Thêm build mới
@@ -87,12 +107,12 @@ app.post("/api/add-builds", async (req, res) => {
 			Item: build,
 		});
 		await docClient.send(putCommand);
-		console.log(`[${timestamp}] Đã thêm build với ID: ${build.id}`);
+		console.log(`[${timestamp}] Đã thêm build với ID: ${build.id.S}`);
 
 		res.status(201).json({ message: "Đã thêm build thành công" });
 	} catch (error) {
 		const timestamp = new Date().toISOString();
-		console.error(`[${timestamp}] Lỗi thêm build:`, error.message);
+		console.error(`[${timestamp}] Lỗi thêm build:`, error.message, { build });
 		res.status(500).json({ error: error.message || "Không thể thêm build" });
 	}
 });
@@ -102,15 +122,20 @@ app.put("/api/update-builds", async (req, res) => {
 	try {
 		const timestamp = new Date().toISOString();
 		const build = req.body;
-		console.log(`[${timestamp}] Nhận yêu cầu cập nhật build`, {
-			buildId: build?.id || "không có ID",
-		});
+		console.log(`[${timestamp}] Nhận yêu cầu cập nhật build`, { build });
 
 		// Kiểm tra dữ liệu
-		if (!build.id || typeof build.id !== "string") {
-			const errorMsg = "Dữ liệu không hợp lệ: Build phải có ID dạng chuỗi";
-			console.error(`[${timestamp}] ${errorMsg}`);
-			throw new Error(errorMsg);
+		if (
+			!build ||
+			typeof build !== "object" ||
+			!build.id ||
+			!build.id.S ||
+			typeof build.id.S !== "string"
+		) {
+			const errorMsg =
+				"Dữ liệu không hợp lệ: Build phải là object với id.S dạng chuỗi";
+			console.error(`[${timestamp}] ${errorMsg}`, { build });
+			return res.status(400).json({ error: errorMsg });
 		}
 
 		// Tạo UpdateExpression động
@@ -118,27 +143,27 @@ app.put("/api/update-builds", async (req, res) => {
 		const expressionAttributeValues = {};
 		const expressionAttributeNames = {};
 
-		Object.entries(build).forEach(([key, value]) => {
+		for (const [key, value] of Object.entries(build)) {
 			if (key !== "id") {
 				updateExpression.push(`#${key} = :${key}`);
 				expressionAttributeNames[`#${key}`] = key;
-				expressionAttributeValues[`:${key}`] = { S: value.toString() };
+				expressionAttributeValues[`:${key}`] = value; // Giữ nguyên định dạng DynamoDB
 			}
-		});
+		}
 
 		if (updateExpression.length === 0) {
 			const errorMsg = "Không có thuộc tính nào để cập nhật";
-			console.error(`[${timestamp}] ${errorMsg}`);
-			throw new Error(errorMsg);
+			console.error(`[${timestamp}] ${errorMsg}`, { build });
+			return res.status(400).json({ error: errorMsg });
 		}
 
-		console.log(`[${timestamp}] Chuẩn bị cập nhật build ID: ${build.id}`, {
+		console.log(`[${timestamp}] Chuẩn bị cập nhật build ID: ${build.id.S}`, {
 			attributes: Object.keys(expressionAttributeNames),
 		});
 
 		const command = new UpdateItemCommand({
 			TableName: TABLE_NAME,
-			Key: { id: { S: build.id } },
+			Key: { id: { S: build.id.S } },
 			UpdateExpression: `SET ${updateExpression.join(", ")}`,
 			ExpressionAttributeNames: expressionAttributeNames,
 			ExpressionAttributeValues: expressionAttributeValues,
@@ -146,14 +171,17 @@ app.put("/api/update-builds", async (req, res) => {
 		});
 
 		await client.send(command);
-		console.log(`[${timestamp}] Đã cập nhật build với ID: ${build.id}`);
+		console.log(`[${timestamp}] Đã cập nhật build với ID: ${build.id.S}`);
 
 		res.status(200).json({ message: "Đã cập nhật build thành công" });
 	} catch (error) {
 		const timestamp = new Date().toISOString();
 		console.error(
-			`[${timestamp}] Lỗi cập nhật build ID: ${build?.id || "không xác định"}`,
-			error.message
+			`[${timestamp}] Lỗi cập nhật build ID: ${
+				build?.id?.S || "không xác định"
+			}`,
+			error.message,
+			{ build }
 		);
 		res
 			.status(500)
@@ -165,46 +193,58 @@ app.put("/api/update-builds", async (req, res) => {
 app.delete("/api/delete-builds", async (req, res) => {
 	try {
 		const timestamp = new Date().toISOString();
-		const buildId = req.body.id;
-		console.log(`[${timestamp}] Nhận yêu cầu xóa build`, { buildId });
+		const build = req.body;
+		console.log(`[${timestamp}] Nhận yêu cầu xóa build`, { build });
 
 		// Kiểm tra dữ liệu
-		if (!buildId || typeof buildId !== "string") {
-			const errorMsg = "Dữ liệu không hợp lệ: ID phải là chuỗi";
-			console.error(`[${timestamp}] ${errorMsg}`);
-			throw new Error(errorMsg);
+		if (
+			!build ||
+			typeof build !== "object" ||
+			!build.id ||
+			!build.id.S ||
+			typeof build.id.S !== "string"
+		) {
+			const errorMsg =
+				"Dữ liệu không hợp lệ: Build phải là object với id.S dạng chuỗi";
+			console.error(`[${timestamp}] ${errorMsg}`, { build });
+			return res.status(400).json({ error: errorMsg });
 		}
 
 		// Xóa build
 		const deleteCommand = new DeleteItemCommand({
 			TableName: TABLE_NAME,
-			Key: { id: { S: buildId } },
+			Key: { id: { S: build.id.S } },
 		});
 		await docClient.send(deleteCommand);
-		console.log(`[${timestamp}] Đã xóa build với ID: ${buildId}`);
+		console.log(`[${timestamp}] Đã xóa build với ID: ${build.id.S}`);
 
 		res.status(200).json({ message: "Đã xóa build thành công" });
 	} catch (error) {
 		const timestamp = new Date().toISOString();
-		console.error(`[${timestamp}] Lỗi xóa build:`, error.message);
+		console.error(`[${timestamp}] Lỗi xóa build:`, error.message, { build });
 		res.status(500).json({ error: error.message || "Không thể xóa build" });
 	}
 });
 
-// API lưu build (chỉ xử lý một build)
+// API lưu build
 app.post("/api/save-builds", async (req, res) => {
 	try {
 		const timestamp = new Date().toISOString();
 		const build = req.body;
-		console.log(`[${timestamp}] Nhận yêu cầu lưu build`, {
-			buildId: build?.id,
-		});
+		console.log(`[${timestamp}] Nhận yêu cầu lưu build`, { build });
 
 		// Kiểm tra dữ liệu
-		if (!build || !build.id || typeof build.id !== "string") {
-			const errorMsg = "Dữ liệu không hợp lệ: Build phải là object với ID dạng chuỗi";
-			console.error(`[${timestamp}] ${errorMsg}`);
-			throw new Error(errorMsg);
+		if (
+			!build ||
+			typeof build !== "object" ||
+			!build.id ||
+			!build.id.S ||
+			typeof build.id.S !== "string"
+		) {
+			const errorMsg =
+				"Dữ liệu không hợp lệ: Build phải là object với id.S dạng chuỗi";
+			console.error(`[${timestamp}] ${errorMsg}`, { build });
+			return res.status(400).json({ error: errorMsg });
 		}
 
 		// Lưu build (thay thế nếu đã tồn tại)
@@ -213,12 +253,12 @@ app.post("/api/save-builds", async (req, res) => {
 			Item: build,
 		});
 		await docClient.send(putCommand);
-		console.log(`[${timestamp}] Đã lưu build với ID: ${build.id}`);
+		console.log(`[${timestamp}] Đã lưu build với ID: ${build.id.S}`);
 
 		res.status(201).json({ message: "Đã lưu build thành công" });
 	} catch (error) {
 		const timestamp = new Date().toISOString();
-		console.error(`[${timestamp}] Lỗi lưu build:`, error.message);
+		console.error(`[${timestamp}] Lỗi lưu build:`, error.message, { build });
 		res.status(500).json({ error: error.message || "Không thể lưu build" });
 	}
 });
