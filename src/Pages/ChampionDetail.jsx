@@ -51,15 +51,15 @@ function ChampionDetail() {
 
 	return (
 		<div className='relative mx-auto max-w-[1200px] p-4 sm:p-6 bg-gray-900 rounded-lg mt-10 text-white'>
-			<div className='flex flex-col md:flex-row gap-4 bg-gray-800 rounded-md'>
+			<div className='flex flex-col md:flex-row gap-4 bg-gray-800 rounded-md '>
 				<img
-					className='w-full h-auto max-h-[200px] sm:max-h-[300px] object-contain rounded-lg'
+					className='h-auto max-h-[200px] sm:max-h-[300px] object-contain rounded-lg'
 					src={champion.assets[0].M.gameAbsolutePath.S}
 					alt={champion.name}
 				/>
 				<div className='flex-1'>
-					<div className='flex flex-col sm:flex-row sm:justify-between'>
-						<div className='text-2xl sm:text-4xl font-bold mb-4'>
+					<div className='flex flex-col sm:flex-row sm:justify-between bg-gray-700 rounded-lg px-2'>
+						<div className='text-2xl sm:text-4xl font-bold m-1 '>
 							{champion.name}
 						</div>
 						{/* Regions */}
@@ -80,7 +80,9 @@ function ChampionDetail() {
 					</div>
 					{/* Mô tả (note) */}
 					{champion.note && (
-						<p className='text-base sm:text-xl mb-4'>{champion.note}</p>
+						<p className='text-base sm:text-xl mt-4 mx-1 bg-gray-700 rounded-lg'>
+							{champion.note}
+						</p>
 					)}
 				</div>
 			</div>
