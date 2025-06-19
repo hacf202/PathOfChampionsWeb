@@ -191,78 +191,35 @@ app.delete("/api/delete-builds", async (req, res) => {
 	}
 });
 
-// API lưu builds
+// API lưu build (chỉ xử lý một build)
 app.post("/api/save-builds", async (req, res) => {
 	try {
 		const timestamp = new Date().toISOString();
-		const builds = req.body;
-		console.log(
-			`[${timestamp}] Nhận yêu cầu lưu ${builds?.length || 0} builds`,
-			{
-				buildIds: builds.map(b => b.id),
-			}
-		);
+		const build = req.body;
+		console.log(`[${timestamp}] Nhận yêu cầu lưu build`, {
+			buildId: build?.id,
+		});
 
 		// Kiểm tra dữ liệu
-		if (
-			!Array.isArray(builds) ||
-			builds.some(build => !build.id || typeof build.id !== "string")
-		) {
-			const errorMsg =
-				"Dữ liệu không hợp lệ: Builds phải là mảng với ID dạng chuỗi";
+		if (!build || !build.id || typeof build.id !== "string") {
+			const errorMsg = "Dữ liệu không hợp lệ: Build phải là object với ID dạng chuỗi";
 			console.error(`[${timestamp}] ${errorMsg}`);
 			throw new Error(errorMsg);
 		}
 
-		// Xóa dữ liệu cũ
-		const scanCommand = new ScanCommand({ TableName: TABLE_NAME });
-		const { Items } = await docClient.send(scanCommand);
-		if (Items && Items.length > 0) {
-			const deleteRequests = Items.map(item => ({
-				DeleteRequest: { Key: { id: item.id } },
-			}));
-			const chunks = chunkArray(deleteRequests, 25);
-			console.log(
-				`[${timestamp}] Chuẩn bị xóa ${Items.length} builds cũ với ${chunks.length} batch(es)`
-			);
-			for (let i = 0; i < chunks.length; i++) {
-				const batchDeleteCommand = new BatchWriteCommand({
-					RequestItems: { [TABLE_NAME]: chunks[i] },
-				});
-				await docClient.send(batchDeleteCommand);
-				console.log(
-					`[${timestamp}] Đã xóa batch ${i + 1}/${chunks.length} của builds cũ`
-				);
-			}
-			console.log(`[${timestamp}] Đã xóa ${Items.length} builds cũ`);
-		} else {
-			console.log(`[${timestamp}] Không có builds cũ để xóa`);
-		}
+		// Lưu build (thay thế nếu đã tồn tại)
+		const putCommand = new PutItemCommand({
+			TableName: TABLE_NAME,
+			Item: build,
+		});
+		await docClient.send(putCommand);
+		console.log(`[${timestamp}] Đã lưu build với ID: ${build.id}`);
 
-		// Đẩy builds mới
-		const putRequests = builds.map(build => ({
-			PutRequest: { Item: build },
-		}));
-		const chunks = chunkArray(putRequests, 25);
-		console.log(
-			`[${timestamp}] Chuẩn bị ghi ${chunks.length} batch(es) builds mới`
-		);
-		for (let i = 0; i < chunks.length; i++) {
-			const batchWriteCommand = new BatchWriteCommand({
-				RequestItems: { [TABLE_NAME]: chunks[i] },
-			});
-			await docClient.send(batchWriteCommand);
-			console.log(
-				`[${timestamp}] Đã ghi batch ${i + 1}/${chunks.length} builds mới`
-			);
-		}
-		console.log(`[${timestamp}] Đã lưu ${builds.length} builds thành công`);
-
-		res.status(201).json({ message: "Đã lưu builds thành công" });
+		res.status(201).json({ message: "Đã lưu build thành công" });
 	} catch (error) {
 		const timestamp = new Date().toISOString();
-		console.error(`[${timestamp}] Lỗi lưu builds:`, error.message);
-		res.status(500).json({ error: error.message || "Không thể lưu builds" });
+		console.error(`[${timestamp}] Lỗi lưu build:`, error.message);
+		res.status(500).json({ error: error.message || "Không thể lưu build" });
 	}
 });
 
