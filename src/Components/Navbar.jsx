@@ -9,7 +9,7 @@ function Navbar() {
 	};
 
 	return (
-		<div className='w-full w-screen mx-auto'>
+		<div className='w-screen mx-auto'>
 			<nav className='flex flex-col sm:flex-row items-center justify-center gap-4 bg-gray-600 p-4 sm:p-6 z-[1] text-white font-bold'>
 				<div className='flex items-center justify-between w-full sm:w-auto'>
 					<img
