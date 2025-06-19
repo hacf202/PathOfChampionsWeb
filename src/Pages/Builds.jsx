@@ -1,9 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import chamPOC from "../Data/chamPOC.json";
 import relics from "../Data/relics-vi_vn.json";
 import items from "../Data/items-vi_vn.json";
-import powers from "../Data/powers-vi_vn.json";
+import powers from "../Data/adventure-powers-vi_vn.json";
 import iconRegions from "../Data/iconRegions.json";
 import BuildList from "./BuildComponents/BuildList.jsx";
 import AddBuildModal from "./BuildComponents/AddBuildModal.jsx";
@@ -88,10 +88,17 @@ const useDataLists = () => {
 	return { championsList, relicsList, itemsList, powersList, regionsList };
 };
 
+// Cache key cho localStorage
+const BUILDS_CACHE_KEY = "cached_builds";
+
 function Builds() {
 	const { championsList, relicsList, itemsList, powersList, regionsList } =
 		useDataLists();
-	const [builds, setBuilds] = useState([]);
+	const [builds, setBuilds] = useState(() => {
+		// Khởi tạo từ cache nếu có
+		const cachedBuilds = localStorage.getItem(BUILDS_CACHE_KEY);
+		return cachedBuilds ? JSON.parse(cachedBuilds) : [];
+	});
 	const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [currentBuild, setCurrentBuild] = useState(null);
@@ -110,15 +117,21 @@ function Builds() {
 	const [selectedRegion, setSelectedRegion] = useState("");
 	const [openDropdownId, setOpenDropdownId] = useState(null);
 
-	const handleToggleDropdown = dropdownId => {
-		setOpenDropdownId(openDropdownId === dropdownId ? null : dropdownId);
-	};
+	// Cập nhật cache mỗi khi builds thay đổi
+	useEffect(() => {
+		localStorage.setItem(BUILDS_CACHE_KEY, JSON.stringify(builds));
+	}, [builds]);
 
-	const handleDropdownSelect = (name, value) => {
+	// Memoize các handler để tránh tạo lại hàm
+	const handleToggleDropdown = useCallback(dropdownId => {
+		setOpenDropdownId(prev => (prev === dropdownId ? null : dropdownId));
+	}, []);
+
+	const handleDropdownSelect = useCallback((name, value) => {
 		if (name === "filterChampion") setFilterChampion(value);
 		if (name === "filterArtifact") setFilterArtifact(value);
 		if (name === "selectedRegion") setSelectedRegion(value);
-	};
+	}, []);
 
 	useEffect(() => {
 		if (saveStatus) {
@@ -127,23 +140,28 @@ function Builds() {
 		}
 	}, [saveStatus]);
 
+	// Tải builds từ server chỉ khi cache rỗng
 	useEffect(() => {
-		fetch("https://pocweb.onrender.com/api/load-builds")
-			.then(response => {
-				if (!response.ok) throw new Error("Lỗi khi tải builds từ server");
-				return response.json();
-			})
-			.then(data => setBuilds(data || []))
-			.catch(error => {
-				console.error("Lỗi khi tải builds:", error);
-				setSaveStatus({
-					type: "error",
-					message: error.message || "Không thể tải builds.",
+		if (builds.length === 0) {
+			fetch("https://pocweb.onrender.com/api/load-builds")
+				.then(response => {
+					if (!response.ok) throw new Error("Lỗi khi tải builds từ server");
+					return response.json();
+				})
+				.then(data => {
+					setBuilds(data || []);
+				})
+				.catch(error => {
+					console.error("Lỗi khi tải builds:", error);
+					setSaveStatus({
+						type: "error",
+						message: error.message || "Không thể tải builds.",
+					});
 				});
-			});
+		}
 	}, []);
 
-	const saveBuildsToFile = async (updatedBuilds, action) => {
+	const saveBuildsToFile = useCallback(async (updatedBuilds, action) => {
 		try {
 			const response = await fetch(
 				"https://pocweb.onrender.com/api/save-builds",
@@ -179,9 +197,9 @@ function Builds() {
 				message: error.message || "Không thể lưu builds.",
 			});
 		}
-	};
+	}, []);
 
-	const validateForm = () => {
+	const validateForm = useCallback(() => {
 		let isValid = true;
 		const newErrors = { championName: "", artifacts: "" };
 
@@ -196,9 +214,9 @@ function Builds() {
 
 		setErrors(newErrors);
 		return isValid;
-	};
+	}, [formData]);
 
-	const handleAddBuild = async () => {
+	const handleAddBuild = useCallback(async () => {
 		if (!validateForm()) return;
 		const newBuild = { id: String(uuidv4()), ...formData };
 		const newBuilds = [...builds, newBuild];
@@ -213,9 +231,9 @@ function Builds() {
 			creator: "",
 		});
 		setIsAddModalOpen(false);
-	};
+	}, [builds, formData, validateForm, saveBuildsToFile]);
 
-	const handleEditBuild = build => {
+	const handleEditBuild = useCallback(build => {
 		setCurrentBuild(build);
 		setFormData({
 			championName: build.championName,
@@ -226,9 +244,9 @@ function Builds() {
 			creator: build.creator,
 		});
 		setIsEditModalOpen(true);
-	};
+	}, []);
 
-	const handleSaveEdit = async () => {
+	const handleSaveEdit = useCallback(async () => {
 		if (!validateForm()) return;
 		const newBuilds = builds.map(build =>
 			build.id === currentBuild.id ? { id: build.id, ...formData } : build
@@ -245,15 +263,16 @@ function Builds() {
 			creator: "",
 		});
 		setCurrentBuild(null);
-	};
+	}, [builds, currentBuild, formData, validateForm, saveBuildsToFile]);
 
-	const handleDeleteBuild = async id => {
-		if (window.confirm("Bạn có chắc muốn xóa build này?")) {
+	const handleDeleteBuild = useCallback(
+		async id => {
 			const newBuilds = builds.filter(build => build.id !== id);
 			setBuilds(newBuilds);
 			await saveBuildsToFile(newBuilds, "delete");
-		}
-	};
+		},
+		[builds, saveBuildsToFile]
+	);
 
 	const uniqueRegions = useMemo(() => {
 		const regions = [
@@ -280,11 +299,11 @@ function Builds() {
 		});
 	}, [builds, filterChampion, filterArtifact, selectedRegion, championsList]);
 
-	const resetFilters = () => {
+	const resetFilters = useCallback(() => {
 		setFilterChampion("");
 		setFilterArtifact("");
 		setSelectedRegion("");
-	};
+	}, []);
 
 	return (
 		<div className='relative w-full min-h-screen bg-gray-900 text-white'>

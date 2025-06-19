@@ -80,7 +80,7 @@ function ChampionDetail() {
 					</div>
 					{/* Mô tả (note) */}
 					{champion.note && (
-						<p className='text-base sm:text-xl mt-4 mx-1 bg-gray-700 rounded-lg'>
+						<p className='text-base sm:text-xl mt-4 mx-1 bg-gray-700 rounded-lg overflow-y-auto h-60 p-2'>
 							{champion.note}
 						</p>
 					)}
@@ -102,12 +102,11 @@ function ChampionDetail() {
 						https://www.youtube.com/@Evin0126/
 					</a>
 				</h2>
-
 				<div className='flex justify-center mb-6 p-4 bg-gray-800 aspect-video'>
 					<iframe
 						width='100%'
 						height='100%'
-						src={`${videoLink}`}
+						src={videoLink || "https://www.youtube.com/embed/dQw4w9WgXcQ"}
 						title='YouTube video player'
 						frameBorder='0'
 						allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'

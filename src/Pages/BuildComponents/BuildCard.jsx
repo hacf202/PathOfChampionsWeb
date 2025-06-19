@@ -71,10 +71,10 @@ function BuildCard({
 					<img
 						src={championImage}
 						alt={build.championName}
-						className='w-16 h-16 object-cover rounded'
+						className='w-16 h-16 object-contain rounded'
 						loading='lazy'
 					/>
-					<span className='max-w-[calc(100vw-16px)] absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 bg-opacity-30 text-white text-xs rounded px-2 py-1 transition-opacity duration-200 opacity-0 group-hover:opacity-100'>
+					<span className='text-center w-[110px] absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 bg-opacity-30 text-white text-xs rounded px-2 py-1 transition-opacity duration-200 opacity-0 group-hover:opacity-100'>
 						{build.championName}
 					</span>
 				</div>
@@ -95,7 +95,7 @@ function BuildCard({
 										className='w-10 h-10 sm:w-12 sm:h-12 object-cover bg-gray-500 rounded-md'
 										loading='lazy'
 									/>
-									<span className='max-w-[calc(100vw-16px)] absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 bg-opacity-30 text-white text-xs rounded px-2 py-1 transition-opacity duration-200 opacity-0 group-hover:opacity-100'>
+									<span className='text-center w-[140px] absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 bg-opacity-30 text-white text-xs rounded px-2 py-1 transition-opacity duration-200 opacity-0 group-hover:opacity-100'>
 										{artifact}
 									</span>
 								</div>
@@ -117,7 +117,7 @@ function BuildCard({
 											className='w-10 h-10 sm:w-12 sm:h-12 object-cover bg-gray-500 rounded-md'
 											loading='lazy'
 										/>
-										<span className='max-w-[calc(100vw-16px)] absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 bg-opacity-30 text-white text-xs rounded px-2 py-1 transition-opacity duration-200 opacity-0 group-hover:opacity-100'>
+										<span className='text-center w-[140px] absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 bg-opacity-30 text-white text-xs rounded px-2 py-1 transition-opacity duration-200 opacity-0 group-hover:opacity-100'>
 											{item}
 										</span>
 									</div>
@@ -140,7 +140,7 @@ function BuildCard({
 											className='w-10 h-10 sm:w-12 sm:h-12 object-cover bg-gray-500 rounded-md'
 											loading='lazy'
 										/>
-										<span className='max-w-[calc(100vw-16px)] absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 bg-opacity-30 text-white text-xs rounded px-2 py-1 transition-opacity duration-200 opacity-0 group-hover:opacity-100'>
+										<span className='text-center w-[140px] absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 bg-opacity-30 text-white text-xs rounded px-2 py-1 transition-opacity duration-200 opacity-0 group-hover:opacity-100'>
 											{power}
 										</span>
 									</div>

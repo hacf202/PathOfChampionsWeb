@@ -1,56 +1,20 @@
 [
-  {
-    "id": "573a021b-cd65-4ae7-ab34-faaa0e3a86da",
-    "championName": "Twisted Fate",
-    "artifacts": [
-      "Búa Chiến Caulfield",
-      "",
-      ""
-    ],
-    "items": [
-      "",
-      "",
-      "",
-      "",
-      "",
-      ""
-    ],
-    "powers": [
-      "",
-      "",
-      "",
-      "",
-      "",
-      ""
-    ],
-    "description": "",
-    "creator": ""
-  },
-  {
-    "id": "ac565dc5-3171-4a51-b7f8-2670a80ec319",
-    "championName": "Lux",
-    "artifacts": [
-      "Đội Quân Quạ Của Swain",
-      "",
-      ""
-    ],
-    "items": [
-      "",
-      "",
-      "",
-      "",
-      "",
-      ""
-    ],
-    "powers": [
-      "",
-      "",
-      "",
-      "",
-      "",
-      ""
-    ],
-    "description": "",
-    "creator": ""
-  }
+	{
+		"id": "573a021b-cd65-4ae7-ab34-faaa0e3a86da",
+		"championName": "Twisted Fate",
+		"artifacts": ["Búa Chiến Caulfield", "", ""],
+		"items": ["", "", "", "", "", ""],
+		"powers": ["", "", "", "", "", ""],
+		"description": "",
+		"creator": ""
+	},
+	{
+		"id": "ac565dc5-3171-4a51-b7f8-2670a80ec319",
+		"championName": "Lux",
+		"artifacts": ["Đội Quân Quạ Của Swain", "", ""],
+		"items": ["", "", "", "", "", ""],
+		"powers": ["", "", "", "", "", ""],
+		"description": "",
+		"creator": ""
+	}
 ]
