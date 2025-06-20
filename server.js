@@ -22,7 +22,7 @@ const client = new DynamoDBClient({
 const TABLE_NAME = "Builds"; // Thay bằng tên bảng của bạn
 
 // Middleware
-app.use(cors({ origin: "https://wpoc.vercel.app/" }));
+app.use(cors({ origin: "https://wpoc.vercel.app" }));
 // app.use(cors({ origin: "http://locahost:5173" })); // Cho phép origin từ frontend
 app.use(express.json());
 
