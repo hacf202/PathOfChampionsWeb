@@ -23,7 +23,7 @@ const TABLE_NAME = "Builds"; // Thay bằng tên bảng của bạn
 
 // Middleware
 app.use(cors({ origin: "https://wpoc.vercel.app/" }));
-app.use(cors({ origin: "http://locahost:5173" })); // Cho phép origin từ frontend
+// app.use(cors({ origin: "http://locahost:5173" })); // Cho phép origin từ frontend
 app.use(express.json());
 
 // Health check endpoint
@@ -156,4 +156,5 @@ app.delete("/api/builds/:id", async (req, res) => {
 // Khởi động server
 app.listen(port, () => {
 	console.log(`Server đang chạy tại http://localhost:${port}`);
+	console.log(`Server đang chạy tại https://pocweb.onrender.com`);
 });
