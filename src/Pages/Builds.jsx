@@ -66,12 +66,10 @@ const useDataLists = () => {
 			name: region.nameRef,
 			image: region.iconAbsolutePath || "/images/placeholder.png",
 		}));
-		// Preload hình ảnh khu vực
 		const validImages = regions
 			.map(r => r.image)
 			.filter(img => img && img !== "/images/placeholder.png");
 		preloadImages(validImages);
-		// Ghi log để kiểm tra dữ liệu
 		if (import.meta.env.DEV) {
 			console.log("Regions List:", regions);
 			regions.forEach(region => {
@@ -88,17 +86,10 @@ const useDataLists = () => {
 	return { championsList, relicsList, itemsList, powersList, regionsList };
 };
 
-// Cache key cho localStorage
-const BUILDS_CACHE_KEY = "cached_builds";
-
 function Builds() {
 	const { championsList, relicsList, itemsList, powersList, regionsList } =
 		useDataLists();
-	const [builds, setBuilds] = useState(() => {
-		// Khởi tạo từ cache nếu có
-		const cachedBuilds = localStorage.getItem(BUILDS_CACHE_KEY);
-		return cachedBuilds ? JSON.parse(cachedBuilds) : [];
-	});
+	const [builds, setBuilds] = useState([]);
 	const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [currentBuild, setCurrentBuild] = useState(null);
@@ -116,13 +107,59 @@ function Builds() {
 	const [filterArtifact, setFilterArtifact] = useState("");
 	const [selectedRegion, setSelectedRegion] = useState("");
 	const [openDropdownId, setOpenDropdownId] = useState(null);
+	const [serverStatus, setServerStatus] = useState(null);
+	const [isRefreshing, setIsRefreshing] = useState(false); // Thêm state cho trạng thái loading
 
-	// Cập nhật cache mỗi khi builds thay đổi
+	// Kiểm tra sức khỏe server
 	useEffect(() => {
-		localStorage.setItem(BUILDS_CACHE_KEY, JSON.stringify(builds));
-	}, [builds]);
+		// fetch("http://localhost:3000/api/checkheal")
+		fetch("https://pocweb.onrender.com/api/checkheal")
+			.then(response => response.json())
+			.then(data => setServerStatus(data.status))
+			.catch(error => {
+				console.error("Lỗi kiểm tra server:", error);
+				setServerStatus("unhealthy");
+			});
+	}, []);
 
-	// Memoize các handler để tránh tạo lại hàm
+	// Tải builds từ server
+	useEffect(() => {
+		fetchBuilds();
+	}, []);
+
+	// Hàm tải builds (tái sử dụng cho nút Làm mới)
+	const fetchBuilds = useCallback(async () => {
+		setIsRefreshing(true);
+		try {
+			// const response = await fetch("http://localhost:3000/api/builds");
+			const response = await fetch("https://pocweb.onrender.com/api/builds");
+			if (!response.ok) throw new Error("Lỗi khi tải builds từ server");
+			const data = await response.json();
+			setBuilds(data || []);
+			setSaveStatus({
+				type: "success",
+				message: "Đã tải lại danh sách builds thành công!",
+			});
+		} catch (error) {
+			console.error("Lỗi khi tải builds:", error);
+			setSaveStatus({
+				type: "error",
+				message: error.message || "Không thể tải builds.",
+			});
+		} finally {
+			setIsRefreshing(false);
+		}
+	}, []);
+
+	// Xóa thông báo sau 5 giây
+	useEffect(() => {
+		if (saveStatus) {
+			const timer = setTimeout(() => setSaveStatus(null), 5000);
+			return () => clearTimeout(timer);
+		}
+	}, [saveStatus]);
+
+	// Memoize các handler
 	const handleToggleDropdown = useCallback(dropdownId => {
 		setOpenDropdownId(prev => (prev === dropdownId ? null : dropdownId));
 	}, []);
@@ -131,72 +168,6 @@ function Builds() {
 		if (name === "filterChampion") setFilterChampion(value);
 		if (name === "filterArtifact") setFilterArtifact(value);
 		if (name === "selectedRegion") setSelectedRegion(value);
-	}, []);
-
-	useEffect(() => {
-		if (saveStatus) {
-			const timer = setTimeout(() => setSaveStatus(null), 5000);
-			return () => clearTimeout(timer);
-		}
-	}, [saveStatus]);
-
-	// Tải builds từ server chỉ khi cache rỗng
-	useEffect(() => {
-		if (builds.length === 0) {
-			fetch("https://pocweb.onrender.com/api/load-builds")
-				.then(response => {
-					if (!response.ok) throw new Error("Lỗi khi tải builds từ server");
-					return response.json();
-				})
-				.then(data => {
-					setBuilds(data || []);
-				})
-				.catch(error => {
-					console.error("Lỗi khi tải builds:", error);
-					setSaveStatus({
-						type: "error",
-						message: error.message || "Không thể tải builds.",
-					});
-				});
-		}
-	}, []);
-
-	const saveBuildsToFile = useCallback(async (updatedBuilds, action) => {
-		try {
-			const response = await fetch(
-				"https://pocweb.onrender.com/api/save-builds",
-				{
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify(updatedBuilds),
-				}
-			);
-			if (!response.ok) {
-				const { error } = await response.json();
-				throw new Error(error || "Lỗi khi lưu builds");
-			}
-			let message;
-			switch (action) {
-				case "add":
-					message = "Đã thêm build thành công!";
-					break;
-				case "edit":
-					message = "Đã cập nhật build thành công!";
-					break;
-				case "delete":
-					message = "Đã xóa build thành công!";
-					break;
-				default:
-					message = "Đã lưu builds thành công!";
-			}
-			setSaveStatus({ type: "success", message });
-		} catch (error) {
-			console.error("Lỗi khi lưu builds:", error);
-			setSaveStatus({
-				type: "error",
-				message: error.message || "Không thể lưu builds.",
-			});
-		}
 	}, []);
 
 	const validateForm = useCallback(() => {
@@ -219,19 +190,37 @@ function Builds() {
 	const handleAddBuild = useCallback(async () => {
 		if (!validateForm()) return;
 		const newBuild = { id: String(uuidv4()), ...formData };
-		const newBuilds = [...builds, newBuild];
-		setBuilds(newBuilds);
-		await saveBuildsToFile(newBuilds, "add");
-		setFormData({
-			championName: "",
-			artifacts: ["", "", ""],
-			items: ["", "", "", "", "", ""],
-			powers: ["", "", "", "", "", ""],
-			description: "",
-			creator: "",
-		});
-		setIsAddModalOpen(false);
-	}, [builds, formData, validateForm, saveBuildsToFile]);
+		try {
+			// const response = await fetch("http://localhost:3000/api/builds", {
+			const response = await fetch("https://pocweb.onrender.com/api/builds", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(newBuild),
+			});
+			if (!response.ok) {
+				const { error } = await response.json();
+				throw new Error(error || "Lỗi khi thêm build");
+			}
+			const data = await response.json();
+			setBuilds(prev => [...prev, data.build]);
+			setSaveStatus({ type: "success", message: "Đã thêm build thành công!" });
+			setFormData({
+				championName: "",
+				artifacts: ["", "", ""],
+				items: ["", "", "", "", "", ""],
+				powers: ["", "", "", "", "", ""],
+				description: "",
+				creator: "",
+			});
+			setIsAddModalOpen(false);
+		} catch (error) {
+			console.error("Lỗi khi thêm build:", error);
+			setSaveStatus({
+				type: "error",
+				message: error.message || "Không thể thêm build.",
+			});
+		}
+	}, [formData, validateForm]);
 
 	const handleEditBuild = useCallback(build => {
 		setCurrentBuild(build);
@@ -248,31 +237,72 @@ function Builds() {
 
 	const handleSaveEdit = useCallback(async () => {
 		if (!validateForm()) return;
-		const newBuilds = builds.map(build =>
-			build.id === currentBuild.id ? { id: build.id, ...formData } : build
-		);
-		setBuilds(newBuilds);
-		await saveBuildsToFile(newBuilds, "edit");
-		setIsEditModalOpen(false);
-		setFormData({
-			championName: "",
-			artifacts: ["", "", ""],
-			items: ["", "", "", "", "", ""],
-			powers: ["", "", "", "", "", ""],
-			description: "",
-			creator: "",
-		});
-		setCurrentBuild(null);
-	}, [builds, currentBuild, formData, validateForm, saveBuildsToFile]);
+		try {
+			const response = await fetch(
+				// `http://localhost:3000/api/builds/${currentBuild.id}`,
+				`https://pocweb.onrender.com/api/builds/${currentBuild.id}`,
+				{
+					method: "PUT",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(formData),
+				}
+			);
+			if (!response.ok) {
+				const { error } = await response.json();
+				throw new Error(error || "Lỗi khi cập nhật build");
+			}
+			const data = await response.json();
+			setBuilds(prev =>
+				prev.map(build => (build.id === currentBuild.id ? data.build : build))
+			);
+			setSaveStatus({
+				type: "success",
+				message: "Đã cập nhật build thành công!",
+			});
+			setIsEditModalOpen(false);
+			setFormData({
+				championName: "",
+				artifacts: ["", "", ""],
+				items: ["", "", "", "", "", ""],
+				powers: ["", "", "", "", "", ""],
+				description: "",
+				creator: "",
+			});
+			setCurrentBuild(null);
+		} catch (error) {
+			console.error("Lỗi khi cập nhật build:", error);
+			setSaveStatus({
+				type: "error",
+				message: error.message || "Không thể cập nhật build.",
+			});
+		}
+	}, [currentBuild, formData, validateForm]);
 
-	const handleDeleteBuild = useCallback(
-		async id => {
-			const newBuilds = builds.filter(build => build.id !== id);
-			setBuilds(newBuilds);
-			await saveBuildsToFile(newBuilds, "delete");
-		},
-		[builds, saveBuildsToFile]
-	);
+	const handleDeleteBuild = useCallback(async id => {
+		try {
+			// const response = await fetch(`http://localhost:3000/api/builds/${id}`, {
+			// 	method: "DELETE",
+			// });
+			const response = await fetch(
+				`https://pocweb.onrender.com/api/builds/${id}`,
+				{
+					method: "DELETE",
+				}
+			);
+			if (!response.ok) {
+				const { error } = await response.json();
+				throw new Error(error || "Lỗi khi xóa build");
+			}
+			setBuilds(prev => prev.filter(build => build.id !== id));
+			setSaveStatus({ type: "success", message: "Đã xóa build thành công!" });
+		} catch (error) {
+			console.error("Lỗi khi xóa build:", error);
+			setSaveStatus({
+				type: "error",
+				message: error.message || "Không thể xóa build.",
+			});
+		}
+	}, []);
 
 	const uniqueRegions = useMemo(() => {
 		const regions = [
@@ -310,7 +340,7 @@ function Builds() {
 			<div className='mt-8 p-4 mx-auto max-w-6xl'>
 				<Notification saveStatus={saveStatus} />
 				<div className='mb-6 flex flex-col sm:flex-row gap-4 items-center justify-center'>
-					<div className=' flex flex-col sm:flex-row gap-4 items-center w-[80%]'>
+					<div className='flex flex-col sm:flex-row gap-4 items-center w-[75%]'>
 						<CustomDropdown
 							name='filterChampion'
 							value={filterChampion}
@@ -357,12 +387,55 @@ function Builds() {
 							className='w-full sm:w-60'
 						/>
 					</div>
-					<button
-						onClick={resetFilters}
-						className=' bg-red-600 text-white rounded-md px-4 py-2 hover:bg-red-700 transition-colors duration-200 font-medium w-[80%] sm:w-auto'
-					>
-						Reset Bộ lọc
-					</button>
+					<div className='flex flex-col sm:flex-row gap-4 w-[80%] sm:w-auto'>
+						<button
+							onClick={resetFilters}
+							className='bg-red-600 text-white rounded-md px-4 py-2 hover:bg-red-700 transition-colors duration-200 font-medium w-full sm:w-auto'
+						>
+							Reset Bộ lọc
+						</button>
+						<button
+							onClick={fetchBuilds}
+							disabled={isRefreshing}
+							className={`bg-blue-600 text-white rounded-md px-4 py-2 hover:bg-blue-700 transition-colors duration-200 font-medium w-full sm:w-auto flex items-center justify-center ${
+								isRefreshing ? "opacity-50 cursor-not-allowed" : ""
+							}`}
+						>
+							{isRefreshing ? (
+								<>
+									<svg
+										className='animate-spin h-5 w-5 mr-2'
+										viewBox='0 0 24 24'
+									>
+										<circle
+											className='opacity-25'
+											cx='12'
+											cy='12'
+											r='10'
+											stroke='currentColor'
+											strokeWidth='4'
+										></circle>
+										<path
+											className='opacity-75'
+											fill='currentColor'
+											d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+										></path>
+									</svg>
+									Đang tải...
+								</>
+							) : (
+								"Làm mới"
+							)}
+						</button>
+					</div>
+				</div>
+				<div className='mb-4 text-center'>
+					{serverStatus === "healthy" && (
+						<span className='text-green-500'>Server đang hoạt động</span>
+					)}
+					{serverStatus === "unhealthy" && (
+						<span className='text-red-500'>Server gặp sự cố</span>
+					)}
 				</div>
 				<BuildList
 					builds={filteredBuilds}

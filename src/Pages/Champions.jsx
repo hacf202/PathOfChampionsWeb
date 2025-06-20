@@ -78,6 +78,14 @@ function Champions() {
 				{/* Bộ lọc và tìm kiếm */}
 				<div className='mb-6 flex flex-col gap-4 bg-gray-800 p-4 rounded-lg'>
 					<div className='flex flex-col sm:flex-row gap-4'>
+						<input
+							type='text'
+							placeholder='Tìm kiếm theo tên...'
+							value={searchTerm}
+							onChange={handleSearchChange}
+							className='p-2 rounded-md text-black w-full'
+							aria-label='Tìm kiếm tướng theo tên'
+						/>
 						<select
 							value={selectedRegion}
 							onChange={handleRegionChange}
@@ -101,14 +109,6 @@ function Champions() {
 							<option value='desc'>Z-A</option>
 						</select>
 					</div>
-					<input
-						type='text'
-						placeholder='Tìm kiếm theo tên...'
-						value={searchTerm}
-						onChange={handleSearchChange}
-						className='p-2 rounded-md text-black w-full'
-						aria-label='Tìm kiếm tướng theo tên'
-					/>
 				</div>
 
 				<div className='pt-4 flex flex-wrap rounded-lg bg-gray-800 items-center justify-center'>

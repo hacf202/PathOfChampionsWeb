@@ -134,11 +134,11 @@ function ChampionDetail() {
 					</div>
 				)}
 			{/* Default Items */}
-			<h2 className='text-xl sm:text-3xl font-semibold m-5'>
+			<h2 className='text-xl sm:text-3xl font-semibold m-5 '>
 				Vật phẩm khuyên dùng
 			</h2>
 			{champion.defaultItems && champion.defaultItems.length > 0 && (
-				<div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 bg-gray-700 rounded-md p-4'>
+				<div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 bg-gray-700 rounded-md p-4'>
 					{champion.defaultItems.map((item, index) => (
 						<img
 							className='w-full max-w-[120px] h-auto'
@@ -164,10 +164,10 @@ function ChampionDetail() {
 				</div>
 			)}
 			<h2 className='text-xl sm:text-3xl font-semibold m-5'>Bộ cổ vật</h2>
-			<div className='flex flex-wrap p-4 justify-center bg-gray-800 rounded-md mt-5'>
+			<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1 bg-gray-700 rounded-md p-4'>
 				{[1, 2, 3, 4, 5, 6].map(set => (
 					<div
-						className='bg-gray-700 rounded-2xl m-1 w-full sm:w-auto'
+						className='bg-gray-600 rounded-2xl m-1 w-full sm:w-auto'
 						key={set}
 					>
 						<h2 className='text-base sm:text-xl font-semibold ml-3'>
@@ -175,10 +175,10 @@ function ChampionDetail() {
 						</h2>
 						{champion[`defaultRelicsSet${set}`] &&
 							champion[`defaultRelicsSet${set}`].length > 0 && (
-								<div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4'>
+								<div className='grid grid-cols-3 sm:grid-cols-3 gap-1 p-1'>
 									{champion[`defaultRelicsSet${set}`].map((relic, index) => (
 										<img
-											className='w-full max-w-[120px] h-auto'
+											className='w-full max-w-[110px] h-auto'
 											key={index}
 											src={findRelic(relic.S)}
 											alt={relic.S}

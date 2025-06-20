@@ -90,6 +90,14 @@ function Relics() {
 			{/* Bộ lọc, tìm kiếm và sắp xếp */}
 			<div className='mb-6 flex flex-col gap-4 bg-gray-800 p-4 rounded-lg'>
 				<div className='flex flex-col sm:flex-row gap-4'>
+					<input
+						type='text'
+						placeholder='Tìm kiếm theo tên...'
+						value={searchTerm}
+						onChange={handleSearchChange}
+						className='p-2 rounded-md text-black w-full'
+						aria-label='Tìm kiếm cổ vật theo tên'
+					/>
 					<select
 						value={selectedRarity}
 						onChange={handleRarityChange}
@@ -115,14 +123,6 @@ function Relics() {
 						<option value='rarityDesc'>Epic - Common</option>
 					</select>
 				</div>
-				<input
-					type='text'
-					placeholder='Tìm kiếm theo tên...'
-					value={searchTerm}
-					onChange={handleSearchChange}
-					className='p-2 rounded-md text-black w-full'
-					aria-label='Tìm kiếm cổ vật theo tên'
-				/>
 			</div>
 
 			<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
